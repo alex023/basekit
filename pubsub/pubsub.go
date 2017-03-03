@@ -3,9 +3,9 @@
 package pubsub
 
 import (
+	"github.com/alex023/basekit"
 	"sync"
 	"sync/atomic"
-	"github.com/alex023/basekit"
 )
 
 type message struct {
@@ -23,6 +23,7 @@ type Pubsub struct {
 	exitFlag      int32
 	memoryMsgChan chan *message
 }
+
 // NewPubsub create a pubsub
 func NewPubsub() *Pubsub {
 	s := &Pubsub{
@@ -68,6 +69,7 @@ func (s *Pubsub) Unsubscribe(topicName string, clientId string) {
 		}
 	}
 }
+
 // PushMessage asynchronous push a message
 func (s *Pubsub) PushMessage(topicName string, m interface{}) {
 	if atomic.LoadInt32(&s.exitFlag) == 1 {
@@ -98,13 +100,13 @@ func (s *Pubsub) notifyMsg(topicName string, message interface{}) bool {
 	ch, found := s.dict[topicName]
 	s.RUnlock()
 
-	if !found{
+	if !found {
 		return false
 	}
 	return ch.NotifyMsg(message)
 }
 
-// Exiting returns a boolean indicating if this topic is closed/exiting
+// Exiting returns a boolean indicating if mc topic is closed/exiting
 func (s *Pubsub) Exiting() bool {
 	return atomic.LoadInt32(&s.exitFlag) == 1
 }
@@ -117,12 +119,13 @@ func (s *Pubsub) Close() {
 		s.wg.Wait()
 	}
 }
+
 //GetTopics get all topics in subscription service module
 func (s *Pubsub) GetTopics() []string {
 	s.RLock()
 	result := make([]string, len(s.dict))
 	i := 0
-	for topic, _ := range s.dict {
+	for topic := range s.dict {
 		result[i] = topic
 		i++
 	}

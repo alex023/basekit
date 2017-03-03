@@ -1,6 +1,6 @@
 // copy from github.com/golang/groupcache/singleflight.go
 
-// package singleflight provide  a duplicate function call suppression mechisam.
+// Package singleflight provide  a duplicate function call suppression mechisam.
 package singleflight
 
 import "sync"

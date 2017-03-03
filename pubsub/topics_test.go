@@ -12,12 +12,12 @@ type MyClient struct {
 	Counter int
 }
 
-func (this *MyClient) ID() string {
-	return this.Uid
+func (mc *MyClient) ID() string {
+	return mc.Uid
 }
-func (this *MyClient) OnMsg(message interface{}) {
-	//fmt.Println(this.Uid+"收到的消息:", message)
-	this.Counter++
+func (mc *MyClient) OnMsg(message interface{}) {
+	//fmt.Println(mc.Uid+"收到的消息:", message)
+	mc.Counter++
 }
 
 type SlowClient struct {

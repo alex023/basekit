@@ -1,13 +1,12 @@
-// Package counter is a multi-thread safe counters
 package basekit
 
 import (
 	"sync"
 )
 
-//Counter counter define
+//Counter counter is a multi-thread safe counters
 type Counter struct {
-	mut sync.Mutex
+	mut     sync.Mutex
 	currNum int //当前数量
 	maxNum  int //最大数量
 }
