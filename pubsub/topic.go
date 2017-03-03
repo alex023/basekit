@@ -1,7 +1,6 @@
 package pubsub
 
 import (
-	"fmt"
 	"github.com/alex023/basekit"
 	"sync"
 	"sync/atomic"
