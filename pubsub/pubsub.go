@@ -5,7 +5,7 @@ package pubsub
 import (
 	"sync"
 	"sync/atomic"
-	"github.com/alex023/basetool"
+	"github.com/alex023/basekit"
 )
 
 type message struct {
@@ -17,7 +17,7 @@ type message struct {
 type Pubsub struct {
 	sync.RWMutex
 	dict          map[string]*Topic //map[topic.Name]*Channel
-	wg            basetool.WaitWraper
+	wg            basekit.WaitWraper
 	exitChan      chan int
 	messageCount  uint64
 	exitFlag      int32

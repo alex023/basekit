@@ -4,12 +4,12 @@ import (
 	"fmt"
 	"sync"
 	"sync/atomic"
-	"github.com/alex023/basetool"
+	"github.com/alex023/basekit"
 )
 
 type Topic struct {
 	sync.RWMutex
-	wg           basetool.WaitWraper
+	wg           basekit.WaitWraper
 	Name         string
 	clients      map[string]func(interface{})
 	messagecount uint64

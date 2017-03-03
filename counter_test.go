@@ -1,4 +1,4 @@
-package basetool
+package basekit
 
 import (
 	"testing"

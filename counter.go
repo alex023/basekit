@@ -1,5 +1,5 @@
 // Package counter is a multi-thread safe counters
-package basetool
+package basekit
 
 import (
 	"sync"
