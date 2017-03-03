@@ -2,9 +2,9 @@ package pubsub
 
 import (
 	"fmt"
+	"github.com/alex023/basekit"
 	"sync"
 	"sync/atomic"
-	"github.com/alex023/basekit"
 )
 
 type Topic struct {
@@ -15,23 +15,19 @@ type Topic struct {
 	messagecount uint64
 	exitFlag     int32
 }
-
+// NewTopic create a topic by assigned name
 func NewTopic(topicName string) *Topic {
 	return &Topic{Name: topicName, clients: make(map[string]func(interface{}))}
 }
+//AddClient assign a new callback function
 func (t *Topic) AddClient(clientId string, callFunc func(msg interface{})) bool {
-	//t.RLock()
-	//_, found := t.clients[client.ID()]
-	//t.RUnlock()
-	//
-	//if !found {
 	t.Lock()
 	t.clients[clientId] = callFunc
 	t.Unlock()
-	//}
-	return true
 
+	return true
 }
+//DeleteClient remove callback function by assigned clientid
 func (t *Topic) DeleteClient(clientId string) int {
 	t.RLock()
 	ret := len(t.clients)
@@ -49,7 +45,7 @@ func (t *Topic) DeleteClient(clientId string) int {
 func (t *Topic) NotifyMsg(message interface{}) bool {
 	t.RLock()
 	defer t.RUnlock()
-	if t.closing(){
+	if t.closing() {
 		return false
 	}
 	for _, client := range t.clients {
@@ -66,7 +62,8 @@ func (t *Topic) ReplyMsg(message interface{}) {
 func (t *Topic) closing() bool {
 	return atomic.LoadInt32(&t.exitFlag) == 1
 }
-// Close close this topic until all messages have been sent to the registered client.
+
+// Close close mc topic until all messages have been sent to the registered client.
 func (t *Topic) Close() {
 	if !atomic.CompareAndSwapInt32(&t.exitFlag, 0, 1) {
 		return
