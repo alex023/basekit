@@ -1,5 +1,4 @@
-// package pubsub is a simple subscription service module that provides asynchronous message distribution based on single computer memory
-
+// Package pubsub is a simple subscription service module that provides asynchronous message distribution based on single computer memory
 package pubsub
 
 import (
@@ -36,32 +35,32 @@ func NewPubsub() *Pubsub {
 }
 
 //Subscribe 订阅主题，要确保输入的clientId唯一，避免不同客户端注册的时候采用同样的ClientId，否则会被替换。
-func (s *Pubsub) Subscribe(topicName string, clientId string, callFunc func(msg interface{})) {
+func (s *Pubsub) Subscribe(topicName string, clientID string, callFunc func(msg interface{})) {
 	s.RLock()
 	ch, found := s.dict[topicName]
 	s.RUnlock()
 	//fmt.Println("那些订阅了的:", client.ID(), topicName)
 	if !found {
 		ch := NewTopic(topicName)
-		ch.AddClient(clientId, callFunc)
+		ch.AddClient(clientID, callFunc)
 		s.Lock()
 		s.dict[topicName] = ch
 		s.Unlock()
 	} else {
-		ch.AddClient(clientId, callFunc)
+		ch.AddClient(clientID, callFunc)
 	}
 }
 
 //Unsubscribe 取消订阅。由于内部使用了waitgroup，在使用时，要特别小心：
 //	1.订阅某个主题的handle，其内部不得直接调用Unsubscribe来注销同一主题。否则，如果该主题正好只有最后一个client，就会被阻塞。
 //	2.如果确实需要，请加入：关键字 go。
-func (s *Pubsub) Unsubscribe(topicName string, clientId string) {
+func (s *Pubsub) Unsubscribe(topicName string, clientID string) {
 	s.RLock()
 	ch, found := s.dict[topicName]
 	s.RUnlock()
 
 	if found {
-		if ch.DeleteClient(clientId) == 0 {
+		if ch.DeleteClient(clientID) == 0 {
 			ch.Close()
 			s.Lock()
 			delete(s.dict, topicName)
@@ -106,7 +105,7 @@ func (s *Pubsub) notifyMsg(topicName string, message interface{}) bool {
 	return ch.NotifyMsg(message)
 }
 
-// Exiting returns a boolean indicating if mc topic is closed/exiting
+// Exiting returns a boolean indicating if topic is closed/exiting
 func (s *Pubsub) Exiting() bool {
 	return atomic.LoadInt32(&s.exitFlag) == 1
 }
@@ -120,7 +119,7 @@ func (s *Pubsub) Close() {
 	}
 }
 
-//GetTopics get all topics in subscription service module
+//GetTopics performs a thread safe operation to get all topics in subscription service module
 func (s *Pubsub) GetTopics() []string {
 	s.RLock()
 	result := make([]string, len(s.dict))

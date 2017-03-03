@@ -49,7 +49,7 @@ func (g *Group) Do(key string, fn func() (interface{}, error)) (interface{}, err
 }
 
 var defaultGroup = new(Group)
-
+//Do  runs the defaultGroup on a single Group.
 func Do(key string, fn func() (interface{}, error)) (interface{}, error) {
 	return defaultGroup.Do(key, fn)
 }
