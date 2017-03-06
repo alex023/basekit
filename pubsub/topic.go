@@ -15,10 +15,12 @@ type Topic struct {
 	messagecount uint64
 	exitFlag     int32
 }
+
 // NewTopic topic constructor
 func NewTopic(topicName string) *Topic {
 	return &Topic{Name: topicName, clients: make(map[string]func(interface{}))}
 }
+
 //AddClient assign a new callback function to this topic
 func (t *Topic) AddClient(clientID string, callFunc func(msg interface{})) bool {
 	t.Lock()
@@ -27,6 +29,7 @@ func (t *Topic) AddClient(clientID string, callFunc func(msg interface{})) bool 
 
 	return true
 }
+
 //DeleteClient remove callback function by assigned clientid
 func (t *Topic) DeleteClient(clientID string) int {
 	t.RLock()
