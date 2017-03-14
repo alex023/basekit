@@ -45,7 +45,7 @@ func (c *Counter) MaxNum() int {
 	return c.maxNum
 }
 
-//创建一个全新的计数器指针，计数、最大值均为0。
+//NewCounter counter constructor
 func NewCounter() *Counter {
 	return &Counter{}
 }

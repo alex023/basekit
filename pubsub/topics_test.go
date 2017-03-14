@@ -8,37 +8,37 @@ import (
 )
 
 type MyClient struct {
-	Uid     string
+	UID     string
 	Counter int
 }
 
 func (mc *MyClient) ID() string {
-	return mc.Uid
+	return mc.UID
 }
 func (mc *MyClient) OnMsg(message interface{}) {
-	//fmt.Println(mc.Uid+"收到的消息:", message)
+	//fmt.Println(mc.UID+"收到的消息:", message)
 	mc.Counter++
 }
 
 type SlowClient struct {
-	Uid     string
+	UID     string
 	Counter int
 }
 
-func (this *SlowClient) ID() string {
-	return this.Uid
+func (sc *SlowClient) ID() string {
+	return sc.UID
 }
-func (this *SlowClient) OnMsg(message interface{}) {
+func (sc *SlowClient) OnMsg(message interface{}) {
 	fmt.Println("执行开始")
 	time.Sleep(time.Second * 5)
 	fmt.Println("执行结束")
-	this.Counter++
+	sc.Counter++
 }
 func Test_Subscribe(t *testing.T) {
 	clients := make([]*MyClient, 10)
 	server := NewPubsub()
 	for i := 0; i < len(clients); i++ {
-		client := &MyClient{Uid: "client" + strconv.Itoa(i)}
+		client := &MyClient{UID: "client" + strconv.Itoa(i)}
 		server.Subscribe(client.ID(), client.ID(), client.OnMsg)
 		server.Subscribe("all", client.ID(), client.OnMsg)
 		clients[i] = client
@@ -62,7 +62,7 @@ func Test_Unsubscribe(t *testing.T) {
 	if len(server.GetTopics()) != 0 {
 		t.Error("初始化服务的主题数量不正确")
 	}
-	client := &SlowClient{Uid: "client" + strconv.Itoa(int(time.Now().Unix()))}
+	client := &SlowClient{UID: "client" + strconv.Itoa(int(time.Now().Unix()))}
 	//server.Subscribe(client, client.UID())
 	server.Unsubscribe("all", client.ID())
 	if len(server.GetTopics()) != 0 {
@@ -79,7 +79,7 @@ func Test_Unsubscribe(t *testing.T) {
 func BenchmarkServer_Subscribe(b *testing.B) {
 	server := NewPubsub()
 	for i := 0; i < b.N; i++ {
-		client := &MyClient{Uid: "client" + strconv.Itoa(int(time.Now().Unix()))}
+		client := &MyClient{UID: "client" + strconv.Itoa(int(time.Now().Unix()))}
 		//server.Subscribe(client, client.UID())
 		server.Subscribe("all", client.ID(), client.OnMsg)
 		server.PushMessage("all", "测试")
@@ -94,7 +94,7 @@ func BenchmarkServer_PublishAll2(b *testing.B) {
 	clients := make([]*MyClient, topicnamber)
 	server := NewPubsub()
 	for i := 0; i < len(clients); i++ {
-		clients[i] = &MyClient{Uid: "client" + strconv.Itoa(i)}
+		clients[i] = &MyClient{UID: "client" + strconv.Itoa(i)}
 		server.Subscribe("all", clients[i].ID(), clients[i].OnMsg)
 	}
 	b.ResetTimer()
@@ -110,7 +110,7 @@ func BenchmarkServer_PublishMessage(b *testing.B) {
 	clients := make([]*MyClient, topicnamber)
 	server := NewPubsub()
 	for i := 0; i < len(clients); i++ {
-		clients[i] = &MyClient{Uid: "client" + strconv.Itoa(i)}
+		clients[i] = &MyClient{UID: "client" + strconv.Itoa(i)}
 		//server.Subscribe(clients[j], "all")
 		server.Subscribe(clients[i].ID(), clients[i].ID(), clients[i].OnMsg)
 	}
