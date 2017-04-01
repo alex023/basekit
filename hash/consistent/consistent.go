@@ -2,8 +2,8 @@
 // Use of this source code is governed by an MIT-style license
 // that can be found in the LICENSE file.
 
-// consistent包提供了一致性哈希的计算功能。
-// 一致性哈希用于分布式请求的负载均衡。比如有三台机器，分别为cacheA,cacheB,cacheC，
+// package consistent 提供了一致性哈希的计算功能，以用于分布式请求的负载均衡。
+// 比如有三台机器，分别为cacheA,cacheB,cacheC，
 // 我们可以通过提供的功能来分配大量用户的大批量请求。
 //
 // 我们可以通过New来创建一致性哈希，通过Add、Remove来增加、删除服务器，通过Get来获取提供服务的物理机。

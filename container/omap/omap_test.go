@@ -16,14 +16,12 @@
 package omap_test
 
 import (
-	"github.com/satori/go.uuid"
+	"github.com/alex023/basekit/container/omap"
 	"math/rand"
 	"sort"
-	"strconv"
 	"strings"
 	"testing"
 	"time"
-	"github.com/alex023/basekit/container/omap"
 )
 
 func TestStringKeyOMapInsertion(t *testing.T) {
@@ -150,7 +148,7 @@ func TestOMap_DeleteIntKey2(t *testing.T) {
 
 type Point struct {
 	ActionTime time.Time
-	Key        string
+	Key        int
 }
 
 var (
@@ -162,7 +160,7 @@ var (
 func getRandPoint() Point {
 	return Point{
 		ActionTime: now.Add(time.Duration(int64(r.Intn(randscope)))),
-		Key:        uuid.NewV1().String(),
+		Key:        rand.Int(),
 	}
 }
 func less(a, b interface{}) bool {
@@ -251,7 +249,7 @@ func TestOMap_DelStructFirst(t *testing.T) {
 		//生成从大到小逆序的点位
 		points[i] = Point{
 			ActionTime: zerotime.Add(time.Duration(int64(num - i))),
-			Key:        strconv.Itoa(num - i),
+			Key:        num - i,
 		}
 		ordermap.Insert(points[i], i)
 		if v, finded := ordermap.Find(points[i]); !finded {
