@@ -14,12 +14,12 @@ type Counter struct {
 
 //AddOne 在原内部计数基础上，+1。
 func (c *Counter) AddOne() int {
+
+	new := atomic.AddInt64(&c.currNum, 1)
 	c.mut.Lock()
 
-	c.currNum++
-
-	if c.maxNum < c.currNum {
-		c.maxNum = c.currNum
+	if c.maxNum < new {
+		c.maxNum = new
 	}
 	c.mut.Unlock()
 

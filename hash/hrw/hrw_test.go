@@ -11,7 +11,7 @@ import (
 
 	"time"
 
-	utilsrand "common/rand"
+	utilsrand "github.com/alex023/basekit/rand"
 )
 
 func Example() {

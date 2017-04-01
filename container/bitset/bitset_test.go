@@ -56,5 +56,4 @@ func BenchmarkBitSet_IsExist(b *testing.B) {
 			break
 		}
 	}
-	//time.Sleep(time.Second*10)
 }

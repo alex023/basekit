@@ -3,7 +3,7 @@ package password_test
 import (
 	"testing"
 
-	"common/password"
+	"github.com/alex023/basekit/password"
 )
 
 func Test_ReturnPassword(t *testing.T) {
