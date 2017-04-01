@@ -23,7 +23,7 @@ import (
 	"strings"
 	"testing"
 	"time"
-	"common/container/omap"
+	"github.com/alex023/basekit/container/omap"
 )
 
 func TestStringKeyOMapInsertion(t *testing.T) {
