@@ -6,9 +6,8 @@ package consistent_test
 
 import (
 	"fmt"
+	"github.com/alex023/basekit/hash/consistent"
 	"log"
-
-	"../consistent"
 )
 
 func ExampleNewConsistent() {
