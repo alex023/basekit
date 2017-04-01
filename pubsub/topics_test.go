@@ -1,7 +1,6 @@
 package pubsub
 
 import (
-	"fmt"
 	"strconv"
 	"testing"
 	"time"
@@ -29,9 +28,7 @@ func (sc *SlowClient) ID() string {
 	return sc.UID
 }
 func (sc *SlowClient) OnMsg(message interface{}) {
-	fmt.Println("执行开始")
 	time.Sleep(time.Second * 5)
-	fmt.Println("执行结束")
 	sc.Counter++
 }
 func Test_Subscribe(t *testing.T) {

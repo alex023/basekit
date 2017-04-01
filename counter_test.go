@@ -48,3 +48,11 @@ func BenchmarkCounter_AddOne(b *testing.B) {
 		c.AddOne()
 	}
 }
+func BenchmarkCounter_DecOne(b *testing.B) {
+	var (
+		c = NewCounter()
+	)
+	for i := 0; i < b.N; i++ {
+		c.DecOne()
+	}
+}
