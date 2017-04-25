@@ -34,24 +34,23 @@ func (sc *SlowClient) OnMsg(message interface{}) {
 	sc.mut.Lock()
 	defer sc.mut.Unlock()
 
-	time.Sleep(time.Second)
+	time.Sleep(time.Microsecond*100)
 	sc.Counter++
-	fmt.Println(sc.Counter)
 }
 func Test_Subscribe(t *testing.T) {
 	clients := make([]*MyClient, 10)
-	server := NewPubsub()
+	center := NewPubsub()
 	for i := 0; i < len(clients); i++ {
 		client := &MyClient{UID: "client" + strconv.Itoa(i)}
-		server.Subscribe(client.ID(), client.ID(), client.OnMsg)
-		server.Subscribe("all", client.ID(), client.OnMsg)
+		center.Subscribe(client.ID(), client.ID(), client.OnMsg)
+		center.Subscribe("all", client.ID(), client.OnMsg)
 		clients[i] = client
 	}
-	server.PushMessage("all", struct{}{})
+	center.PushMessage("all", struct{}{})
 	time.Sleep(time.Second)
 	for i := 0; i < len(clients); i++ {
-		server.Unsubscribe("all", clients[i].ID())
-		server.Unsubscribe(clients[i].ID(), clients[i].ID())
+		center.Unsubscribe("all", clients[i].ID())
+		center.Unsubscribe(clients[i].ID(), clients[i].ID())
 	}
 	for _, client := range clients {
 		if client.Counter != 1 {
@@ -84,7 +83,6 @@ func TestPubsub_Close(t *testing.T) {
 
 	center.Subscribe("all", client.ID(), client.OnMsg)
 	for i := 0; i < 10; i++ {
-		time.Sleep(time.Microsecond)
 		center.PushMessage("all", "ok")
 	}
 	center.Close()
@@ -95,14 +93,14 @@ func TestPubsub_Close(t *testing.T) {
 
 // 注册\注销\发布各一次的性能
 func BenchmarkServer_Subscribe(b *testing.B) {
-	server := NewPubsub()
+	center := NewPubsub()
 	for i := 0; i < b.N; i++ {
 		client := &MyClient{UID: "client" + strconv.Itoa(int(time.Now().Unix()))}
-		//server.Subscribe(client, client.UID())
-		server.Subscribe("all", client.ID(), client.OnMsg)
-		server.PushMessage("all", "测试")
-		server.Unsubscribe("all", client.ID())
-		//server.Unsubscribe(client, client.UID())
+		//center.Subscribe(client, client.UID())
+		center.Subscribe("all", client.ID(), client.OnMsg)
+		center.PushMessage("all", "测试")
+		center.Unsubscribe("all", client.ID())
+		//center.Unsubscribe(client, client.UID())
 	}
 }
 
@@ -110,15 +108,15 @@ func BenchmarkServer_Subscribe(b *testing.B) {
 func BenchmarkServer_PublishAll2(b *testing.B) {
 	topicnamber := 1000
 	clients := make([]*MyClient, topicnamber)
-	server := NewPubsub()
+	center := NewPubsub()
 	for i := 0; i < len(clients); i++ {
 		clients[i] = &MyClient{UID: "client" + strconv.Itoa(i)}
-		server.Subscribe("all", clients[i].ID(), clients[i].OnMsg)
+		center.Subscribe("all", clients[i].ID(), clients[i].OnMsg)
 	}
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		j := i % topicnamber
-		server.PushMessage("all", strconv.Itoa(j)) //,clients[i].UID+"发布消息")
+		center.PushMessage("all", strconv.Itoa(j)) //,clients[i].UID+"发布消息")
 	}
 }
 
@@ -126,15 +124,15 @@ func BenchmarkServer_PublishAll2(b *testing.B) {
 func BenchmarkServer_PublishMessage(b *testing.B) {
 	topicnamber := 10000
 	clients := make([]*MyClient, topicnamber)
-	server := NewPubsub()
+	center := NewPubsub()
 	for i := 0; i < len(clients); i++ {
 		clients[i] = &MyClient{UID: "client" + strconv.Itoa(i)}
-		//server.Subscribe(clients[j], "all")
-		server.Subscribe(clients[i].ID(), clients[i].ID(), clients[i].OnMsg)
+		//center.Subscribe(clients[j], "all")
+		center.Subscribe(clients[i].ID(), clients[i].ID(), clients[i].OnMsg)
 	}
 	b.ResetTimer()
 	for j := 0; j < b.N; j++ {
 		rem := j % topicnamber
-		server.PushMessage("client", strconv.Itoa(rem))
+		center.PushMessage("client", strconv.Itoa(rem))
 	}
 }
