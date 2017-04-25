@@ -1,7 +1,6 @@
 package pubsub
 
 import (
-	"fmt"
 	"strconv"
 	"sync"
 	"testing"
