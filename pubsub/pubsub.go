@@ -15,20 +15,18 @@ type message struct {
 // Pubsub is a  subscription service module
 type Pubsub struct {
 	sync.RWMutex
-	dict          map[string]*Topic //map[topic.Name]*Channel
-	wg            basekit.WaitWraper
-	exitChan      chan int
-	messageCount  uint64
-	exitFlag      int32
-	memoryMsgChan chan *message
+	dict     map[string]*Topic //map[topic.Name]*Channel
+	wg       basekit.WaitWraper
+	msgCache chan *message
+	msgCount uint64
+	exitFlag int32
 }
 
 // NewPubsub create a pubsub
 func NewPubsub() *Pubsub {
 	s := &Pubsub{
-		dict:          make(map[string]*Topic),
-		memoryMsgChan: make(chan *message, 1000),
-		exitChan:      make(chan int, 0),
+		dict:     make(map[string]*Topic),
+		msgCache: make(chan *message, 1000),
 	}
 	s.wg.Wrap(func() { s.popMsg() })
 	return s
@@ -75,22 +73,18 @@ func (s *Pubsub) PushMessage(topicName string, m interface{}) {
 		return
 	}
 
-	s.memoryMsgChan <- &message{topicName, m}
+	s.msgCache <- &message{topicName, m}
 
-	atomic.AddUint64(&s.messageCount, 1)
+	atomic.AddUint64(&s.msgCount, 1)
 
 }
 
 func (s *Pubsub) popMsg() {
-	for {
-		select {
-		case msg := <-s.memoryMsgChan:
-			s.notifyMsg(msg.topic, msg.body)
-		case <-s.exitChan:
-			goto Exit
-		}
+	for msg := range s.msgCache {
+		s.wg.Wrap(func() { s.notifyMsg(msg.topic, msg.body) })
 	}
-Exit:
+	//s.wg.Wait()
+
 }
 
 //发布消息
@@ -113,8 +107,7 @@ func (s *Pubsub) Exiting() bool {
 // Close safe exit service
 func (s *Pubsub) Close() {
 	if atomic.CompareAndSwapInt32(&s.exitFlag, 0, 1) {
-		s.exitChan <- 1
-		close(s.memoryMsgChan)
+		close(s.msgCache)
 		s.wg.Wait()
 	}
 }

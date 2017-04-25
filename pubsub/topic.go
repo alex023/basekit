@@ -9,11 +9,11 @@ import (
 //Topic struct definition
 type Topic struct {
 	sync.RWMutex
-	wg           basekit.WaitWraper
-	Name         string
-	clients      map[string]func(interface{})
-	messagecount uint64
-	exitFlag     int32
+	wg       basekit.WaitWraper
+	Name     string
+	clients  map[string]func(interface{})
+	msgCount uint64
+	exitFlag int32
 }
 
 // NewTopic topic constructor
@@ -56,6 +56,8 @@ func (t *Topic) NotifyMsg(message interface{}) bool {
 		f := client
 		t.wg.Wrap(func() { f(message) })
 	}
+	//todo add wg.Wait for every event should be sent to client when pubsub closing
+	t.wg.Wait()
 	return true
 }
 
