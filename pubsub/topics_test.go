@@ -1,7 +1,9 @@
 package pubsub
 
 import (
+	"fmt"
 	"strconv"
+	"sync"
 	"testing"
 	"time"
 )
@@ -20,6 +22,7 @@ func (mc *MyClient) OnMsg(message interface{}) {
 }
 
 type SlowClient struct {
+	mut     sync.Mutex
 	UID     string
 	Counter int
 }
@@ -28,8 +31,12 @@ func (sc *SlowClient) ID() string {
 	return sc.UID
 }
 func (sc *SlowClient) OnMsg(message interface{}) {
-	time.Sleep(time.Second * 5)
+	sc.mut.Lock()
+	defer sc.mut.Unlock()
+
+	time.Sleep(time.Second)
 	sc.Counter++
+	fmt.Println(sc.Counter)
 }
 func Test_Subscribe(t *testing.T) {
 	clients := make([]*MyClient, 10)
@@ -55,20 +62,34 @@ func Test_Subscribe(t *testing.T) {
 
 // 注销测试
 func Test_Unsubscribe(t *testing.T) {
-	server := NewPubsub()
-	if len(server.GetTopics()) != 0 {
+	center := NewPubsub()
+	if len(center.GetTopics()) != 0 {
 		t.Error("初始化服务的主题数量不正确")
 	}
 	client := &SlowClient{UID: "client" + strconv.Itoa(int(time.Now().Unix()))}
 	//server.Subscribe(client, client.UID())
-	server.Unsubscribe("all", client.ID())
-	if len(server.GetTopics()) != 0 {
+	center.Unsubscribe("all", client.ID())
+	if len(center.GetTopics()) != 0 {
 		t.Error("初始化服务的主题数量不正确")
 	}
-	server.Subscribe("all", client.ID(), client.OnMsg)
-	server.PushMessage("all", "ok")
-	if len(server.GetTopics()) != 1 {
+	center.Subscribe("all", client.ID(), client.OnMsg)
+	center.PushMessage("all", "ok")
+	if len(center.GetTopics()) != 1 {
 		t.Error("初始化服务的主题数量不正确")
+	}
+}
+func TestPubsub_Close(t *testing.T) {
+	center := NewPubsub()
+	client := &SlowClient{UID: "client" + strconv.Itoa(int(time.Now().Unix()))}
+
+	center.Subscribe("all", client.ID(), client.OnMsg)
+	for i := 0; i < 10; i++ {
+		time.Sleep(time.Microsecond)
+		center.PushMessage("all", "ok")
+	}
+	center.Close()
+	if client.Counter == 1000 {
+		t.Error("客户端响应数量存在问题！")
 	}
 }
 
