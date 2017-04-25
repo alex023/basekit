@@ -170,7 +170,7 @@ func Test_SortUniformDistribution_stringOtherTime(t *testing.T) {
 	nodes := []int{1, 2, 3, 4, 5}
 	key := make([]byte, 16)
 	// 产生10个随机字符串
-	for j := 0; j < 100; j++ {
+	for j := 0; j < 10; j++ {
 		counts := make(map[int]int)
 		str := utilsrand.RandomAlphanumeric(20)
 		// 每个字符串用HRW计算200次
