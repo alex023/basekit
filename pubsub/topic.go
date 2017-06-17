@@ -8,38 +8,38 @@ import (
 
 //Topic struct definition
 type Topic struct {
-	sync.RWMutex
-	wg       basekit.WaitWraper
-	Name     string
-	clients  map[string]func(interface{})
-	msgCount uint64
-	exitFlag int32
+	rwmut     sync.RWMutex
+	Name      string
+	wg        basekit.WaitWraper
+	consumers map[string]func(interface{})
+	msgCount  uint64
+	exitFlag  int32
 }
 
 // NewTopic topic constructor
 func NewTopic(topicName string) *Topic {
-	return &Topic{Name: topicName, clients: make(map[string]func(interface{}))}
+	return &Topic{Name: topicName, consumers: make(map[string]func(interface{}))}
 }
 
-//AddClient assign a new callback function to this topic
-func (t *Topic) AddClient(clientID string, callFunc func(msg interface{})) bool {
-	t.Lock()
-	t.clients[clientID] = callFunc
-	t.Unlock()
+//AddConsumer assign a new callback function to this topic
+func (t *Topic) AddConsumer(clientID string, callFunc func(msg interface{})) bool {
+	t.rwmut.Lock()
+	t.consumers[clientID] = callFunc
+	t.rwmut.Unlock()
 
 	return true
 }
 
-//DeleteClient remove callback function by assigned clientid
-func (t *Topic) DeleteClient(clientID string) int {
-	t.RLock()
-	ret := len(t.clients)
-	t.RUnlock()
+//RmConsumer remove callback function by assigned clientid
+func (t *Topic) RmConsumer(clientID string) int {
+	t.rwmut.RLock()
+	ret := len(t.consumers)
+	t.rwmut.RUnlock()
 
 	if ret > 0 {
-		t.Lock()
-		delete(t.clients, clientID)
-		t.Unlock()
+		t.rwmut.Lock()
+		delete(t.consumers, clientID)
+		t.rwmut.Unlock()
 		ret--
 	}
 	return ret
@@ -47,29 +47,23 @@ func (t *Topic) DeleteClient(clientID string) int {
 
 //NotifyMsg 向订阅了Topic的client发送消息
 func (t *Topic) NotifyMsg(message interface{}) bool {
-	t.RLock()
-	defer t.RUnlock()
-	if t.closing() {
+	t.rwmut.RLock()
+	defer t.rwmut.RUnlock()
+	if atomic.LoadInt32(&t.exitFlag) == 1 {
 		return false
 	}
-	for _, client := range t.clients {
+	for _, client := range t.consumers {
 		f := client
 		t.wg.Wrap(func() { f(message) })
 	}
-	//todo add wg.Wait for every event should be sent to client when pubsub closing
-	t.wg.Wait()
 	return true
-}
-
-func (t *Topic) closing() bool {
-	return atomic.LoadInt32(&t.exitFlag) == 1
 }
 
 // Close close mc topic until all messages have been sent to the registered client.
 func (t *Topic) Close() {
 	if !atomic.CompareAndSwapInt32(&t.exitFlag, 0, 1) {
-		return
+		//add wg.Wait for every event should be sent to client when pubsub closing
+		t.wg.Wait()
+		t.consumers = nil
 	}
-	//等待正在执行的广播消息完成，通过wait确保注册方法的执行
-	t.wg.Wait()
 }
