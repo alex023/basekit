@@ -14,10 +14,9 @@ type Counter struct {
 
 //AddOne 在原内部计数基础上，+1。
 func (c *Counter) AddOne() int {
-
 	new := atomic.AddInt64(&c.currNum, 1)
-	c.mut.Lock()
 
+	c.mut.Lock()
 	if c.maxNum < new {
 		c.maxNum = new
 	}
@@ -28,7 +27,6 @@ func (c *Counter) AddOne() int {
 
 //DecOne 在原内部计数基础上，-1。
 func (c *Counter) DecOne() int {
-
 	return int(atomic.AddInt64(&c.currNum, -1))
 
 }
@@ -41,6 +39,14 @@ func (c *Counter) Current() int {
 //MaxNum 计数器生存周期内，最大的计数。
 func (c *Counter) MaxNum() int {
 	return int(atomic.LoadInt64(&c.maxNum))
+}
+
+//Reset 重置计数器
+func (c *Counter) Reset() {
+	c.mut.Lock()
+	c.currNum = 0
+	c.maxNum = 0
+	c.mut.Unlock()
 }
 
 //NewCounter counter constructor

@@ -14,7 +14,7 @@ type message struct {
 
 // Pubsub is a  subscription service module
 type Pubsub struct {
-	sync.RWMutex
+	rwmut    sync.RWMutex
 	dict     map[string]*Topic //map[topic.Name]*Channel
 	wg       basekit.WaitWraper
 	msgCache chan *message
@@ -34,18 +34,18 @@ func NewPubsub() *Pubsub {
 
 //Subscribe 订阅主题，要确保输入的clientId唯一，避免不同客户端注册的时候采用同样的ClientId，否则会被替换。
 func (s *Pubsub) Subscribe(topicName string, clientID string, callFunc func(msg interface{})) {
-	s.RLock()
+	s.rwmut.RLock()
 	ch, found := s.dict[topicName]
-	s.RUnlock()
+	s.rwmut.RUnlock()
 	//fmt.Println("那些订阅了的:", client.ID(), topicName)
 	if !found {
 		ch := NewTopic(topicName)
-		ch.AddClient(clientID, callFunc)
-		s.Lock()
+		ch.AddConsumer(clientID, callFunc)
+		s.rwmut.Lock()
 		s.dict[topicName] = ch
-		s.Unlock()
+		s.rwmut.Unlock()
 	} else {
-		ch.AddClient(clientID, callFunc)
+		ch.AddConsumer(clientID, callFunc)
 	}
 }
 
@@ -53,16 +53,16 @@ func (s *Pubsub) Subscribe(topicName string, clientID string, callFunc func(msg 
 //	1.订阅某个主题的handle，其内部不得直接调用Unsubscribe来注销同一主题。否则，如果该主题正好只有最后一个client，就会被阻塞。
 //	2.如果确实需要，请加入：关键字 go。
 func (s *Pubsub) Unsubscribe(topicName string, clientID string) {
-	s.RLock()
+	s.rwmut.RLock()
 	ch, found := s.dict[topicName]
-	s.RUnlock()
+	s.rwmut.RUnlock()
 
 	if found {
-		if ch.DeleteClient(clientID) == 0 {
+		if ch.RmConsumer(clientID) == 0 {
 			ch.Close()
-			s.Lock()
+			s.rwmut.Lock()
 			delete(s.dict, topicName)
-			s.Unlock()
+			s.rwmut.Unlock()
 		}
 	}
 }
@@ -83,15 +83,13 @@ func (s *Pubsub) popMsg() {
 	for msg := range s.msgCache {
 		s.wg.Wrap(func() { s.notifyMsg(msg.topic, msg.body) })
 	}
-	//s.wg.Wait()
-
 }
 
 //发布消息
 func (s *Pubsub) notifyMsg(topicName string, message interface{}) bool {
-	s.RLock()
+	s.rwmut.RLock()
 	ch, found := s.dict[topicName]
-	s.RUnlock()
+	s.rwmut.RUnlock()
 
 	if !found {
 		return false
@@ -109,18 +107,23 @@ func (s *Pubsub) Close() {
 	if atomic.CompareAndSwapInt32(&s.exitFlag, 0, 1) {
 		close(s.msgCache)
 		s.wg.Wait()
+
+		for _, topic := range s.dict {
+			topic.Close()
+		}
+		s.dict = nil
 	}
 }
 
 //GetTopics performs a thread safe operation to get all topics in subscription service module
 func (s *Pubsub) GetTopics() []string {
-	s.RLock()
+	s.rwmut.RLock()
 	result := make([]string, len(s.dict))
 	i := 0
 	for topic := range s.dict {
 		result[i] = topic
 		i++
 	}
-	s.RUnlock()
+	s.rwmut.RUnlock()
 	return result
 }
